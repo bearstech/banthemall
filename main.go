@@ -7,39 +7,56 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"time"
 )
+
+func consolidate(gi *libgeo.GeoIP, count chan string) {
+	scores := make(map[string]int)
+	c := time.Tick(30 * time.Second)
+	for {
+		select {
+		case ip := <-count:
+			scores[ip] += 1
+		case <-c:
+			for ip, n := range scores {
+				loc := gi.GetLocationByIP(ip)
+				fmt.Printf("%s %s #%d\n", loc.CountryCode, ip, n)
+			}
+			scores = make(map[string]int)
+		}
+	}
+}
 
 func main() {
 	gi, err := libgeo.Load("GeoIP.dat")
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		fmt.Printf("Error Libgeo: %s\n", err.Error())
 		return
 	}
 
-	again := true
 	apachelog, err := regexp.Compile("(.*) (.*) (.*) (\\[.*\\])")
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error Regexp: %s\n", err.Error())
+		return
 	}
+
 	bio := bufio.NewReader(os.Stdin)
-	for again {
+	count := make(chan string)
+	go consolidate(gi, count)
+	for {
 		line, hasMoreInLine, err := bio.ReadLine()
 		if err == io.EOF {
-			//again = false
 			continue
 		}
 		if err != nil {
-			panic(err)
+			fmt.Printf("Error Regexp: %s\n", err.Error())
+			continue
 		}
 		if hasMoreInLine {
 			fmt.Println("Line too long")
 		}
 		mat := apachelog.FindSubmatch(line)
 		ip := string(mat[1])
-		loc := gi.GetLocationByIP(ip)
-		fmt.Print(loc.CountryCode)
-		fmt.Print(" ")
-		fmt.Println(ip)
-
+		count <- ip
 	}
 }
