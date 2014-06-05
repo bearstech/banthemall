@@ -75,7 +75,7 @@ func main() {
 	count := make(chan string)
 	go consolidate(gi, count)
 	for {
-		line, hasMoreInLine, err := bio.ReadLine()
+		line, err := bio.ReadString('\n')
 		if err == io.EOF {
 			continue
 		}
@@ -83,10 +83,7 @@ func main() {
 			fmt.Printf("Error Regexp: %s\n", err.Error())
 			continue
 		}
-		if hasMoreInLine {
-			fmt.Println("Line too long")
-		}
-		mat := apachelog.FindSubmatch(line)
+		mat := apachelog.FindStringSubmatch(line)
 		ip := string(mat[1])
 		count <- ip
 	}
