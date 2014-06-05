@@ -18,7 +18,7 @@ func rbl(ip string) (status string) {
 	r, err := net.LookupHost(name)
 	if err != nil {
 		//Optimistic answser
-        return "-"
+		return "-"
 	}
 	if r[0] == "127.0.0.10" || r[0] == "127.0.0.11" {
 		return "PBL"
@@ -38,17 +38,22 @@ func rbl(ip string) (status string) {
 func consolidate(gi *libgeo.GeoIP, count chan string) {
 	scores := make(map[string]int)
 	c := time.Tick(30 * time.Second)
+	var loc *libgeo.Location
+	var status string
+	var cc string
+
 	for {
 		select {
 		case ip := <-count:
 			scores[ip] += 1
 		case <-c:
 			for ip, n := range scores {
-				loc := gi.GetLocationByIP(ip)
-				status := rbl(ip)
-				fmt.Printf("%s %s #%d %s\n", loc.CountryCode, ip, n, status)
+				loc = gi.GetLocationByIP(ip)
+				status = rbl(ip)
+				cc = loc.CountryCode
+				fmt.Printf("%s %s #%d %s\n", cc, ip, n, status)
+				delete(scores, ip)
 			}
-			scores = make(map[string]int)
 		}
 	}
 }
