@@ -67,7 +67,11 @@ func main() {
 		return
 	}
 
-	apachelog, err := regexp.Compile("(.*) (.*) (.*) (\\[.*\\])")
+	/*
+	   5.39.32.126 - - [05/Jun/2014:21:49:52 +0200] "POST /mt/mt-tb.cgi/6 HTTP/1.1" 403 147 "http://jechercheunemeuf.info/" "PHP/5.2.66"
+	*/
+	r := "^(?P<RemoteIP>\\S+) \\S+ \\S+ \\[(?P<Timestamp>[^\\]]+)\\] \"(?P<Method>[A-Z]+) (?P<Url>[^\\s]+)[^\"]*\" (?P<StatusCode>\\d+) (?P<RequestSize>\\d+|-) \"(?P<Referer>[^\"]*)\" \"(?P<Browser>[^\"]*)\""
+	apachelog, err := regexp.Compile(r)
 	if err != nil {
 		fmt.Printf("Error Regexp: %s\n", err.Error())
 		return
@@ -85,8 +89,8 @@ func main() {
 			fmt.Printf("Error Regexp: %s\n", err.Error())
 			continue
 		}
-		mat := apachelog.FindStringSubmatch(line)
-		ip := string(mat[1])
+		mat := apachelog.FindAllStringSubmatch(line, -1)
+		ip := mat[0][1]
 		count <- ip
 	}
 }
