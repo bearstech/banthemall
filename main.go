@@ -38,8 +38,6 @@ func rbl(ip string) (status string) {
 func consolidate(gi *libgeo.GeoIP, count chan string) {
 	scores := make(map[string]int)
 	c := time.Tick(30 * time.Second)
-	var loc *libgeo.Location
-	var status string
 	var cc string
 
 	for {
@@ -48,9 +46,13 @@ func consolidate(gi *libgeo.GeoIP, count chan string) {
 			scores[ip] += 1
 		case <-c:
 			for ip, n := range scores {
-				loc = gi.GetLocationByIP(ip)
-				status = rbl(ip)
-				cc = loc.CountryCode
+				loc := gi.GetLocationByIP(ip)
+				status := rbl(ip)
+				if loc == nil {
+					cc = "??"
+				} else {
+					cc = loc.CountryCode
+				}
 				fmt.Printf("%s %s #%d %s\n", cc, ip, n, status)
 				delete(scores, ip)
 			}
