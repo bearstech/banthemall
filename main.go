@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+type combined struct {
+	ip          string
+	timeStamp   string
+	method      string
+	url         string
+	status      string
+	requestSize string
+	referer     string
+	browser     string
+}
+
 func rbl(ip string) (status string) {
 	blocks := strings.Split(ip, ".")
 	name := fmt.Sprintf("%s.%s.%s.%s.zen.spamhaus.org", blocks[3], blocks[2], blocks[1], blocks[0])
@@ -35,14 +46,15 @@ func rbl(ip string) (status string) {
 	return r[0]
 }
 
-func consolidate(gi *libgeo.GeoIP, count chan string) {
+func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]int)
 	c := time.Tick(30 * time.Second)
 	var cc string
 
 	for {
 		select {
-		case ip := <-count:
+		case combi := <-count:
+			ip := combi.ip
 			scores[ip] += 1
 		case <-c:
 			for ip, n := range scores {
@@ -78,7 +90,7 @@ func main() {
 	}
 
 	bio := bufio.NewReader(os.Stdin)
-	count := make(chan string)
+	count := make(chan combined)
 	go consolidate(gi, count)
 	for {
 		line, err := bio.ReadString('\n')
@@ -90,7 +102,17 @@ func main() {
 			continue
 		}
 		mat := apachelog.FindAllStringSubmatch(line, -1)
-		ip := mat[0][1]
-		count <- ip
+		if len(mat) > 0 && len(mat[0]) > 0 {
+			ip := combined{
+				mat[0][1],
+				mat[0][2],
+				mat[0][3],
+				mat[0][4],
+				mat[0][5],
+				mat[0][6],
+				mat[0][7],
+				mat[0][6]}
+			count <- ip
+		}
 	}
 }
