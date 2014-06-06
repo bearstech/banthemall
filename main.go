@@ -54,8 +54,8 @@ func consolidate(gi *libgeo.GeoIP, count chan string) {
 					cc = loc.CountryCode
 				}
 				fmt.Printf("%s %s #%d %s\n", cc, ip, n, status)
-				delete(scores, ip)
 			}
+            scores = make(map[string]int)
 		}
 	}
 }
