@@ -46,8 +46,19 @@ func rbl(ip string) (status string) {
 	return r[0]
 }
 
+func status(statuscode string) (r int) {
+	f := statuscode[0]
+	if f == '1' || f == '2' || f == '3' {
+		return 0
+	}
+	if f == '4' {
+		return 1
+	}
+	return 2
+}
+
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
-	scores := make(map[string]int)
+	scores := make(map[string]map[int]int)
 	long_scores := make(map[string]int)
 	total := 0
 	long := 0
@@ -57,12 +68,17 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 		select {
 		case combi := <-count:
 			ip := combi.ip
-			scores[ip] += 1
+			s := status(combi.status)
+			_, ok := scores[ip]
+			if !ok {
+				scores[ip] = make(map[int]int)
+			}
+			scores[ip][s] += 1
 			long_scores[ip] += 1
 			total += 1
 		case <-c:
 			long += 1
-			for ip, n := range scores {
+			for ip, sco := range scores {
 				loc := gi.GetLocationByIP(ip)
 				status := rbl(ip)
 				if loc == nil {
@@ -70,10 +86,13 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 				} else {
 					cc = loc.CountryCode
 				}
-				fmt.Printf("%s %s #%d %s\n", cc, ip, n, status)
+				r23 := sco[0]
+				r4 := sco[1]
+				r5 := sco[2]
+				fmt.Printf("%s %s [23]xx: %d 4xx: %d 5xx: %d #%d %s\n", cc, ip, r23, r4, r5, r23+r4+r5, status)
 			}
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
-			scores = make(map[string]int)
+			scores = make(map[string]map[int]int)
 			total = 0
 			if long == 10 {
 				long = 0
