@@ -48,15 +48,20 @@ func rbl(ip string) (status string) {
 
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]int)
-	c := time.Tick(30 * time.Second)
+	long_scores := make(map[string]int)
+	total := 0
+	long := 0
+	c := time.Tick(60 * time.Second)
 	var cc string
-
 	for {
 		select {
 		case combi := <-count:
 			ip := combi.ip
 			scores[ip] += 1
+			long_scores[ip] += 1
+			total += 1
 		case <-c:
+			long += 1
 			for ip, n := range scores {
 				loc := gi.GetLocationByIP(ip)
 				status := rbl(ip)
@@ -67,7 +72,17 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 				}
 				fmt.Printf("%s %s #%d %s\n", cc, ip, n, status)
 			}
-            scores = make(map[string]int)
+			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
+			scores = make(map[string]int)
+			total = 0
+			if long == 10 {
+				long = 0
+				for ip, n := range long_scores {
+					status := rbl(ip)
+					fmt.Printf("\tLong: %s #%d %s\n", ip, n, status)
+				}
+				long_scores = make(map[string]int)
+			}
 		}
 	}
 }
