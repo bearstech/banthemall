@@ -121,6 +121,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			}
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
+			agents = make(map[string]*set)
 			total = 0
 			if long == 10 {
 				long = 0
