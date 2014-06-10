@@ -173,7 +173,7 @@ func main() {
 				mat[0][5],
 				mat[0][6],
 				mat[0][7],
-				mat[0][6]}
+				mat[0][8]}
 			count <- ip
 		}
 	}
