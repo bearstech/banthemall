@@ -124,10 +124,13 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			total = 0
 			if long == 10 {
 				long = 0
+				long_total := 0
 				for ip, n := range long_scores {
 					status := rbl(ip)
-					fmt.Printf("\tLong: %s #%d %s\n", ip, n, status)
+					fmt.Printf("\tLong: %15s #%d %s\n", ip, n, status)
+					long_total += n
 				}
+				fmt.Printf("\tLong total: %d\n\n", long_total)
 				long_scores = make(map[string]int)
 			}
 		}
