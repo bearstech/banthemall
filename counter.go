@@ -1,7 +1,7 @@
 package main
 
 import (
-    "hash/fnv"
+	"hash/fnv"
 )
 
 type Counter struct {

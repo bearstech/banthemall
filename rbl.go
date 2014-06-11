@@ -1,11 +1,10 @@
 package main
 
 import (
-    "fmt"
-    "strings"
-    "net"
+	"fmt"
+	"net"
+	"strings"
 )
-
 
 func Rbl(ip string) (status string) {
 	blocks := strings.Split(ip, ".")
