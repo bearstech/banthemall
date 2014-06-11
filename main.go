@@ -35,6 +35,7 @@ func status(statuscode string) (r int) {
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]map[int]int)
 	agents := make(map[string]*Counter)
+	urls := make(map[string]*Counter)
 	long_scores := make(map[string]int)
 	total := 0
 	long := 0
@@ -45,17 +46,19 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 		case combi := <-count:
 			ip := combi.ip
 			s := status(combi.status)
-			_, ok := scores[ip]
-			if !ok {
+			if _, ok := scores[ip]; !ok {
 				scores[ip] = make(map[int]int)
 			}
 			scores[ip][s] += 1
 			long_scores[ip] += 1
-			_, ok = agents[ip]
-			if !ok {
+			if _, ok := agents[ip]; !ok {
 				agents[ip] = NewCounter()
 			}
 			agents[ip].Add(combi.browser)
+			if _, ok := urls[ip]; !ok {
+				urls[ip] = NewCounter()
+			}
+			urls[ip].Add(combi.url)
 			total += 1
 		case <-c:
 			long += 1
@@ -70,11 +73,14 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 				r23 := sco[0]
 				r4 := sco[1]
 				r5 := sco[2]
-				fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d %s\n", cc, ip, r23, r4, r5, r23+r4+r5, agents[ip].Size(), status)
+				fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d #url: %4d %s\n",
+					cc, ip, r23, r4, r5, r23+r4+r5, agents[ip].Size(),
+					urls[ip].Size(), status)
 			}
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
 			agents = make(map[string]*Counter)
+			urls = make(map[string]*Counter)
 			total = 0
 			if long == 10 {
 				long = 0
