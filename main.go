@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"time"
 )
 
@@ -31,6 +32,19 @@ func status(statuscode string) (r int) {
 	}
 	return 2
 }
+
+type user struct {
+	ip    string
+	score int
+}
+
+type byscore []user
+
+func (b byscore) Len() int { return len(b) }
+
+func (b byscore) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+
+func (b byscore) Less(i, j int) bool { return b[i].score < b[j].score }
 
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]map[int]int)
@@ -62,7 +76,14 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			total += 1
 		case <-c:
 			long += 1
+			ss := []user{}
 			for ip, sco := range scores {
+				ss = append(ss, user{ip, sco[0] + sco[1] + sco[2]})
+			}
+			sort.Sort(byscore(ss))
+			for _, s := range ss {
+				ip := s.ip
+				sco := scores[ip]
 				loc := gi.GetLocationByIP(ip)
 				status := Rbl(ip)
 				if loc == nil {
