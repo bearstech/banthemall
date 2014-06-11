@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/nranchev/go-libGeoIP"
-	"hash/fnv"
 	"io"
 	"net"
 	"os"
@@ -24,26 +23,6 @@ type combined struct {
 	browser     string
 }
 
-type set struct {
-	data map[uint32]bool
-}
-
-func NewSet() *set {
-	s := new(set)
-	s.data = make(map[uint32]bool)
-	return s
-}
-
-func (s set) Add(element string) {
-	hash := fnv.New32()
-	hash.Write([]byte(element))
-	h := hash.Sum32()
-	s.data[h] = true
-}
-
-func (s set) Size() (size int) {
-	return len(s.data)
-}
 
 func rbl(ip string) (status string) {
 	blocks := strings.Split(ip, ".")
@@ -81,7 +60,7 @@ func status(statuscode string) (r int) {
 
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]map[int]int)
-	agents := make(map[string]*set)
+	agents := make(map[string]*Counter)
 	long_scores := make(map[string]int)
 	total := 0
 	long := 0
@@ -100,7 +79,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			long_scores[ip] += 1
 			_, ok = agents[ip]
 			if !ok {
-				agents[ip] = NewSet()
+				agents[ip] = NewCounter()
 			}
 			agents[ip].Add(combi.browser)
 			total += 1
@@ -121,7 +100,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			}
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
-			agents = make(map[string]*set)
+			agents = make(map[string]*Counter)
 			total = 0
 			if long == 10 {
 				long = 0
