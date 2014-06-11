@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/nranchev/go-libGeoIP"
 	"io"
-	"net"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -21,30 +19,6 @@ type combined struct {
 	requestSize string
 	referer     string
 	browser     string
-}
-
-
-func rbl(ip string) (status string) {
-	blocks := strings.Split(ip, ".")
-	name := fmt.Sprintf("%s.%s.%s.%s.zen.spamhaus.org", blocks[3], blocks[2], blocks[1], blocks[0])
-	r, err := net.LookupHost(name)
-	if err != nil {
-		//Optimistic answser
-		return "-"
-	}
-	if r[0] == "127.0.0.10" || r[0] == "127.0.0.11" {
-		return "PBL"
-	}
-	if r[0] == "127.0.0.2" {
-		return "SBL"
-	}
-	if r[0] == "127.0.0.3" {
-		return "CSS"
-	}
-	if r[0] == "127.0.0.4" || r[0] == "127.0.0.5" || r[0] == "127.0.0.6" || r[0] == "127.0.0.7" {
-		return "XBL"
-	}
-	return r[0]
 }
 
 func status(statuscode string) (r int) {
@@ -87,7 +61,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			long += 1
 			for ip, sco := range scores {
 				loc := gi.GetLocationByIP(ip)
-				status := rbl(ip)
+				status := Rbl(ip)
 				if loc == nil {
 					cc = "??"
 				} else {
@@ -106,7 +80,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 				long = 0
 				long_total := 0
 				for ip, n := range long_scores {
-					status := rbl(ip)
+					status := Rbl(ip)
 					fmt.Printf("\tLong: %15s #%d %s\n", ip, n, status)
 					long_total += n
 				}
