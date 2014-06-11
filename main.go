@@ -39,7 +39,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	long_scores := make(map[string]int)
 	total := 0
 	long := 0
-	c := time.Tick(60 * time.Second)
+	c := time.Tick(10 * time.Second)
 	var cc string
 	for {
 		select {
