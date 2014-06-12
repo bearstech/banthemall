@@ -44,7 +44,7 @@ func (b byscore) Len() int { return len(b) }
 
 func (b byscore) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
-func (b byscore) Less(i, j int) bool { return b[i].score < b[j].score }
+func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 
 func consolidate(gi *libgeo.GeoIP, count chan combined) {
 	scores := make(map[string]map[int]int)
