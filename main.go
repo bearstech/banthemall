@@ -7,21 +7,9 @@ import (
 	"github.com/nranchev/go-libGeoIP"
 	"io"
 	"os"
-	"regexp"
 	"sort"
 	"time"
 )
-
-type combined struct {
-	ip          string
-	timeStamp   string
-	method      string
-	url         string
-	status      string
-	requestSize string
-	referer     string
-	browser     string
-}
 
 func status(statuscode string) (r int) {
 	f := statuscode[0]
@@ -47,7 +35,7 @@ func (b byscore) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
 func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 
-func consolidate(gi *libgeo.GeoIP, thresold int, count chan combined) {
+func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 	scores := make(map[string]map[int]int)
 	agents := make(map[string]*Counter)
 	urls := make(map[string]*Counter)
@@ -142,39 +130,21 @@ func main() {
 		return
 	}
 
-	/*
-	   5.39.32.126 - - [05/Jun/2014:21:49:52 +0200] "POST /mt/mt-tb.cgi/6 HTTP/1.1" 403 147 "http://jechercheunemeuf.info/" "PHP/5.2.66"
-	*/
-	r := "^(?P<RemoteIP>\\S+) \\S+ \\S+ \\[(?P<Timestamp>[^\\]]+)\\] \"(?P<Method>[A-Z]+) (?P<Url>[^\\s]+)[^\"]*\" (?P<StatusCode>\\d+) (?P<RequestSize>\\d+|-) \"(?P<Referer>[^\"]*)\" \"(?P<Browser>[^\"]*)\""
-	apachelog, err := regexp.Compile(r)
+	apachelog, err := NewCombinedParser()
 	if err != nil {
 		fmt.Printf("Error Regexp: %s\n", err.Error())
 		return
 	}
 
 	bio := bufio.NewReader(os.Stdin)
-	count := make(chan combined)
+	count := make(chan Combined)
 	go consolidate(gi, flagThresold, count)
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
 			continue
 		}
-		if err != nil {
-			fmt.Printf("Error Regexp: %s\n", err.Error())
-			continue
-		}
-		mat := apachelog.FindAllStringSubmatch(line, -1)
-		if len(mat) > 0 && len(mat[0]) > 0 {
-			ip := combined{
-				mat[0][1],
-				mat[0][2],
-				mat[0][3],
-				mat[0][4],
-				mat[0][5],
-				mat[0][6],
-				mat[0][7],
-				mat[0][8]}
+		if ip, ok := apachelog.Parse(line); ok {
 			count <- ip
 		}
 	}
