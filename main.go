@@ -110,7 +110,14 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan combined) {
 			if long == 60 {
 				long = 0
 				long_total := 0
+				ss := []user{}
 				for ip, n := range long_scores {
+					ss = append(ss, user{ip, n})
+				}
+				sort.Sort(byscore(ss))
+				for _, s := range ss {
+					ip := s.ip
+					n := long_scores[ip]
 					status := Rbl(ip)
 					fmt.Printf("\tLong: %15s #%d %s\n", ip, n, status)
 					long_total += n
