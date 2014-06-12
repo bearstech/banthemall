@@ -103,7 +103,7 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 			agents = make(map[string]*Counter)
 			urls = make(map[string]*Counter)
 			total = 0
-			if long == 10 {
+			if long == 60 {
 				long = 0
 				long_total := 0
 				for ip, n := range long_scores {
