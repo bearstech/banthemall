@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/nranchev/go-libGeoIP"
 	"io"
@@ -46,7 +47,7 @@ func (b byscore) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
 func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 
-func consolidate(gi *libgeo.GeoIP, count chan combined) {
+func consolidate(gi *libgeo.GeoIP, thresold int, count chan combined) {
 	scores := make(map[string]map[int]int)
 	agents := make(map[string]*Counter)
 	urls := make(map[string]*Counter)
@@ -94,9 +95,12 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 				r23 := sco[0]
 				r4 := sco[1]
 				r5 := sco[2]
-				fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d #url: %4d %s\n",
-					cc, ip, r23, r4, r5, r23+r4+r5, agents[ip].Size(),
-					urls[ip].Size(), status)
+				r := r23 + r4 + r5
+				if r >= thresold {
+					fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d #url: %4d %s\n",
+						cc, ip, r23, r4, r5, r, agents[ip].Size(),
+						urls[ip].Size(), status)
+				}
 			}
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
@@ -119,6 +123,12 @@ func consolidate(gi *libgeo.GeoIP, count chan combined) {
 }
 
 func main() {
+	var flagThresold int
+
+	flag.IntVar(&flagThresold, "thresold", 0, "Minimum mumber of hits per 10 seconds")
+
+	flag.Parse()
+
 	gi, err := libgeo.Load("GeoIP.dat")
 	if err != nil {
 		fmt.Printf("Error Libgeo: %s\n", err.Error())
@@ -137,7 +147,7 @@ func main() {
 
 	bio := bufio.NewReader(os.Stdin)
 	count := make(chan combined)
-	go consolidate(gi, count)
+	go consolidate(gi, flagThresold, count)
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
