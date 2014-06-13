@@ -140,6 +140,7 @@ func main() {
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
+			time.Sleep(500 * time.Millisecond)
 			continue
 		}
 		if ip, ok := apachelog.Parse(line); ok {
