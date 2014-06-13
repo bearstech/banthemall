@@ -118,9 +118,7 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 }
 
 func main() {
-	var flagThresold int
-
-	flag.IntVar(&flagThresold, "thresold", 0, "Minimum mumber of hits per 10 seconds")
+    flagThresold := flag.Int("thresold", 0, "Minimum mumber of hits per 10 seconds")
 
 	flag.Parse()
 
@@ -138,7 +136,7 @@ func main() {
 
 	bio := bufio.NewReader(os.Stdin)
 	count := make(chan Combined)
-	go consolidate(gi, flagThresold, count)
+	go consolidate(gi, *flagThresold, count)
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
