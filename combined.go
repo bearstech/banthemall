@@ -46,7 +46,6 @@ func (c CombinedParser) Parse(line string) (Combined, bool) {
 			mat[0][7],
 			mat[0][8]}
 		return ip, true
-	} else {
-		return Combined{}, false
 	}
+	return Combined{}, false
 }

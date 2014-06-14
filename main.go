@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/nranchev/go-libGeoIP"
 	"io"
 	"os"
 	"sort"
 	"time"
+
+	"github.com/nranchev/go-libGeoIP"
 )
 
 func status(statuscode string) (r int) {
@@ -39,7 +40,7 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 	scores := make(map[string]map[int]int)
 	agents := make(map[string]*Counter)
 	urls := make(map[string]*Counter)
-	long_scores := make(map[string]int)
+	longScores := make(map[string]int)
 	total := 0
 	long := 0
 	c := time.Tick(10 * time.Second)
@@ -52,8 +53,8 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 			if _, ok := scores[ip]; !ok {
 				scores[ip] = make(map[int]int)
 			}
-			scores[ip][s] += 1
-			long_scores[ip] += 1
+			scores[ip][s]++
+			longScores[ip]++
 			if _, ok := agents[ip]; !ok {
 				agents[ip] = NewCounter()
 			}
@@ -62,9 +63,9 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 				urls[ip] = NewCounter()
 			}
 			urls[ip].Add(combi.url)
-			total += 1
+			total++
 		case <-c:
-			long += 1
+			long++
 			ss := []user{}
 			for ip, sco := range scores {
 				ss = append(ss, user{ip, sco[0] + sco[1] + sco[2]})
@@ -97,31 +98,32 @@ func consolidate(gi *libgeo.GeoIP, thresold int, count chan Combined) {
 			total = 0
 			if long == 60 {
 				long = 0
-				long_total := 0
+				longTotal := 0
 				ss := []user{}
-				for ip, n := range long_scores {
+				for ip, n := range longScores {
 					ss = append(ss, user{ip, n})
 				}
 				sort.Sort(byscore(ss))
 				for _, s := range ss {
 					ip := s.ip
-					n := long_scores[ip]
+					n := longScores[ip]
 					status := Rbl(ip)
 					fmt.Printf("\tLong: %15s #%d %s\n", ip, n, status)
-					long_total += n
+					longTotal += n
 				}
-				fmt.Printf("\tLong total: %d\n\n", long_total)
-				long_scores = make(map[string]int)
+				fmt.Printf("\tLong total: %d\n\n", longTotal)
+				longScores = make(map[string]int)
 			}
 		}
 	}
 }
 
 func main() {
-    flagThresold := flag.Int("thresold", 0, "Minimum mumber of hits per 10 seconds")
+	flagThresold := flag.Int("thresold", 0, "Minimum mumber of hits per 10 seconds")
 
 	flag.Parse()
 
+	//FIXME try official Debian path, local path, and nothing.
 	gi, err := libgeo.Load("GeoIP.dat")
 	if err != nil {
 		fmt.Printf("Error Libgeo: %s\n", err.Error())
