@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"os"
 	"time"
 )
 
@@ -33,6 +35,11 @@ func NewCarbon(address string, freq time.Duration) *Carbon {
 func (c Carbon) loop() {
 	stat := make(map[string]int)
 	t := time.Tick(c.freq)
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Println("Trouble with hostname", err)
+		hostname = "john-doe"
+	}
 	for {
 		select {
 		case s := <-c.msg:
@@ -53,20 +60,21 @@ func (c Carbon) loop() {
 				}
 			}
 		case now := <-t:
-			fmt.Println("Tick", now)
 			if len(stat) == 0 {
 				continue
 			}
 			conn, err := net.Dial("tcp", c.address)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 			for k, v := range stat {
-				fmt.Fprintf(conn, "%s %d %d\n", k, v, now.Unix())
+				fmt.Fprintf(conn, "servers.%s.%s %d %d\n", hostname, k, v, now.Unix())
 			}
 			stat = make(map[string]int)
-			conn.Close()
+			if err = conn.Close(); err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	panic("aaaaahhhh")
