@@ -13,8 +13,14 @@ import (
 
 func main() {
 	flagThresold := flag.Int("thresold", 0, "Minimum mumber of hits per 10 seconds")
+	flagCarbon := flag.String("carbon", "", "Send some metrics to carbond")
 
 	flag.Parse()
+
+	var carbon *Carbon = nil
+	if *flagCarbon != "" {
+		carbon = NewCarbon(*flagCarbon, 1*time.Minute)
+	}
 
 	//FIXME try official Debian path, local path, and nothing.
 	gi, err := libgeo.Load("GeoIP.dat")
@@ -31,7 +37,7 @@ func main() {
 
 	bio := bufio.NewReader(os.Stdin)
 	count := make(chan Combined)
-	go consolidate(gi, *flagThresold, count)
+	go consolidate(gi, *flagThresold, carbon, count)
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
