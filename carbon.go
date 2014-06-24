@@ -33,7 +33,9 @@ func NewCarbon(address string, freq time.Duration) *Carbon {
 	c.address = address
 	c.msg = make(chan stat)
 	c.freq = freq
-	go c.loop()
+	if address != "" {
+		go c.loop()
+	}
 	return c
 }
 
@@ -89,12 +91,16 @@ func (c Carbon) loop() {
 Max counter
 */
 func (c Carbon) Max(key string, value int) {
-	c.msg <- stat{'m', key, value}
+	if c.address != "" {
+		c.msg <- stat{'m', key, value}
+	}
 }
 
 /*
 Sum counter
 */
 func (c Carbon) Sum(key string, value int) {
-	c.msg <- stat{'s', key, value}
+	if c.address != "" {
+		c.msg <- stat{'s', key, value}
+	}
 }
