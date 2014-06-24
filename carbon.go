@@ -18,11 +18,16 @@ type stat struct {
 Carbon client
 */
 type Carbon struct {
+	/*Address of the carbond server*/
 	address string
 	msg     chan stat
-	freq    time.Duration
+	/*Consolidation frequency*/
+	freq time.Duration
 }
 
+/*
+NewCarbon return a fresh Carbon client.
+*/
 func NewCarbon(address string, freq time.Duration) *Carbon {
 	c := new(Carbon)
 	c.address = address
@@ -80,10 +85,16 @@ func (c Carbon) loop() {
 	panic("aaaaahhhh")
 }
 
+/*
+Max counter
+*/
 func (c Carbon) Max(key string, value int) {
 	c.msg <- stat{'m', key, value}
 }
 
+/*
+Sum counter
+*/
 func (c Carbon) Sum(key string, value int) {
 	c.msg <- stat{'s', key, value}
 }
