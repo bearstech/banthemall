@@ -17,10 +17,7 @@ func main() {
 
 	flag.Parse()
 
-	var carbon *Carbon = nil
-	if *flagCarbon != "" {
-		carbon = NewCarbon(*flagCarbon, 1*time.Minute)
-	}
+	carbon := NewCarbon(*flagCarbon, 1*time.Minute)
 
 	//FIXME try official Debian path, local path, and nothing.
 	gi, err := libgeo.Load("GeoIP.dat")
