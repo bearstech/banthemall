@@ -72,6 +72,11 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 				sco := scores[ip]
 				loc := gi.GetLocationByIP(ip)
 				status := Rbl(ip)
+				if status == "-" {
+					carbon.Sum("banthemall.spamhaus.RAS", 1)
+				} else {
+					carbon.Sum("banthemall.spamhaus."+status, 1)
+				}
 				if loc == nil {
 					cc = "??"
 				} else {
@@ -87,6 +92,8 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 						urls[ip].Size(), status)
 				}
 			}
+			carbon.Max("banthemall.ip.max", len(scores))
+			carbon.Max("banthemall.hit.max", total)
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
 			agents = make(map[string]*Counter)
