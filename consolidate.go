@@ -91,9 +91,9 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 						cc, ip, r23, r4, r5, r, agents[ip].Size(),
 						urls[ip].Size(), status)
 				}
+				carbon.Max("banthemall.hit-per-ip.max", r)
 			}
-			carbon.Max("banthemall.ip.max", len(scores))
-			carbon.Max("banthemall.hit.max", total)
+			carbon.Max("banthemall.distinct-ip.max", len(scores))
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
 			scores = make(map[string]map[int]int)
 			agents = make(map[string]*Counter)
@@ -113,6 +113,7 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 					status := Rbl(ip)
 					fmt.Printf("\tLong: %15s #%d %s\n", ip, n, status)
 					longTotal += n
+					carbon.Max("banthemall.long.hit-per-ip.max", n)
 				}
 				fmt.Printf("\tLong total: %d\n\n", longTotal)
 				longScores = make(map[string]int)
