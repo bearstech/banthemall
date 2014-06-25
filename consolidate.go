@@ -92,6 +92,7 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 						urls[ip].Size(), status)
 				}
 				carbon.Max("banthemall.hit-per-ip.max", r)
+				carbon.List("banthemall.hit-per-ip.percentile", r)
 			}
 			carbon.Max("banthemall.distinct-ip.max", len(scores))
 			fmt.Printf("\t%d hits from %d ip\n", total, len(scores))
