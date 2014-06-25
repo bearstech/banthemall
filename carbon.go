@@ -41,6 +41,7 @@ func NewCarbon(address string, freq time.Duration) *Carbon {
 
 func (c Carbon) loop() {
 	stat := make(map[string]int)
+	lstat := make(map[string]*Percentile)
 	t := time.Tick(c.freq)
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -66,6 +67,12 @@ func (c Carbon) loop() {
 					stat[s.key] = s.value
 				}
 			}
+			if s.action == 'l' {
+				if _, ok := lstat[s.key]; !ok {
+					lstat[s.key] = NewPercentile()
+				}
+				lstat[s.key].Append(s.value)
+			}
 		case now := <-t:
 			if len(stat) == 0 {
 				continue
@@ -78,7 +85,12 @@ func (c Carbon) loop() {
 			for k, v := range stat {
 				fmt.Fprintf(conn, "servers.%s.%s %d %d\n", hostname, k, v, now.Unix())
 			}
+			for k, v := range lstat {
+				fmt.Fprintf(conn, "servers.%s.%s.50 %d %d\n", hostname, k, v.Percentile(50), now.Unix())
+				fmt.Fprintf(conn, "servers.%s.%s.95 %d %d\n", hostname, k, v.Percentile(95), now.Unix())
+			}
 			stat = make(map[string]int)
+			lstat = make(map[string]*Percentile)
 			if err = conn.Close(); err != nil {
 				log.Println(err)
 			}
@@ -102,5 +114,11 @@ Sum counter
 func (c Carbon) Sum(key string, value int) {
 	if c.address != "" {
 		c.msg <- stat{'s', key, value}
+	}
+}
+
+func (c Carbon) List(key string, value int) {
+	if c.address != "" {
+		c.msg <- stat{'l', key, value}
 	}
 }
