@@ -18,11 +18,11 @@ type IP struct {
 }
 
 func NewIP(ip string) *IP {
-	n := new(IP)
-	n.ip = ip
-	n.agents = NewCounter()
-	n.urls = NewCounter()
-	return n
+	return &IP{
+		ip:     ip,
+		agents: NewCounter(),
+		urls:   NewCounter(),
+	}
 }
 
 func (ip *IP) Add(statusCode string) {
@@ -47,9 +47,9 @@ type ShortTerm struct {
 }
 
 func NewShortTerm() *ShortTerm {
-	s := new(ShortTerm)
-	s.bag_ip = make(map[string]*IP)
-	return s
+	return &ShortTerm{
+		bag_ip: make(map[string]*IP),
+	}
 }
 
 func (s *ShortTerm) Add(combi *Combined) {
@@ -78,6 +78,10 @@ func (s *ShortTerm) IPs() []*IP {
 		r[i] = s.bag_ip[ip.ip]
 	}
 	return r
+}
+
+func (s *ShortTerm) Size() int {
+	return len(s.bag_ip)
 }
 
 func (shortTerm *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
@@ -125,9 +129,9 @@ type LongTerm struct {
 }
 
 func NewLongTerm() *LongTerm {
-	l := new(LongTerm)
-	l.hits = make(map[string]int)
-	return l
+	return &LongTerm{
+		hits: make(map[string]int),
+	}
 }
 
 func (l *LongTerm) Add(combi *Combined) {
