@@ -37,5 +37,6 @@ func TestConsolidate(t *testing.T) {
 	assert.Equal(t, 1, len(ips))
 	assert.Equal(t, 2, ips[0].hits4)
 	assert.Equal(t, 2, l.total)
-	shortConsolidation(s, nil, 0, nil)
+	s.Consolidate(nil, 0, nil)
+	l.Consolidate(nil)
 }

@@ -80,8 +80,43 @@ func (s *ShortTerm) IPs() []*IP {
 	return r
 }
 
-func (s *ShortTerm) Consolidate() {
-
+func (shortTerm *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
+	for _, i := range shortTerm.IPs() {
+		ip := i.ip
+		var loc *libgeo.Location
+		if gi != nil {
+			loc = gi.GetLocationByIP(ip)
+		} else {
+			loc = nil
+		}
+		status := Rbl(ip)
+		if carbon != nil {
+			if status == "-" {
+				carbon.Sum("banthemall.spamhaus.RAS", 1)
+			} else {
+				carbon.Sum("banthemall.spamhaus."+status, 1)
+			}
+		}
+		var cc string
+		if loc == nil {
+			cc = "??"
+		} else {
+			cc = loc.CountryCode
+		}
+		if i.Hits() >= thresold {
+			fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d #url: %4d %s\n",
+				cc, ip, i.hits123, i.hits4, i.hits5, i.Hits(), i.agents.Size(),
+				i.urls.Size(), status)
+		}
+		if carbon != nil {
+			carbon.Max("banthemall.hit-per-ip.max", i.Hits())
+			carbon.List("banthemall.hit-per-ip.percentile", i.Hits())
+		}
+	}
+	if carbon != nil {
+		carbon.Max("banthemall.distinct-ip.max", shortTerm.ips)
+	}
+	fmt.Printf("\t%d hits from %d ip\n", shortTerm.total, shortTerm.ips)
 }
 
 type LongTerm struct {
@@ -121,6 +156,18 @@ func (l *LongTerm) Users() []user {
 	return users
 }
 
+func (longTerm *LongTerm) Consolidate(carbon *Carbon) {
+	for _, user := range longTerm.Users() {
+		ip := user.ip
+		status := Rbl(ip)
+		fmt.Printf("\tLong: %15s #%d %s\n", ip, user.score, status)
+		if carbon != nil {
+			carbon.Max("banthemall.long.hit-per-ip.max", user.score)
+		}
+	}
+	fmt.Printf("\tLong total: %d\n\n", longTerm.total)
+}
+
 type user struct {
 	ip    string
 	score int
@@ -134,57 +181,9 @@ func (b byscore) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
 func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 
-func shortConsolidation(shortTerm *ShortTerm, gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
-	for _, i := range shortTerm.IPs() {
-		ip := i.ip
-		var loc *libgeo.Location
-		if gi != nil {
-			loc = gi.GetLocationByIP(ip)
-		} else {
-			loc = nil
-		}
-		status := Rbl(ip)
-		if carbon != nil {
-			if status == "-" {
-				carbon.Sum("banthemall.spamhaus.RAS", 1)
-			} else {
-				carbon.Sum("banthemall.spamhaus."+status, 1)
-			}
-		}
-		var cc string
-		if loc == nil {
-			cc = "??"
-		} else {
-			cc = loc.CountryCode
-		}
-		if i.Hits() >= thresold {
-			fmt.Printf("%s %15s [23]xx: %4d 4xx: %4d 5xx: %4d #%4d #ua: %4d #url: %4d %s\n",
-				cc, ip, i.hits123, i.hits4, i.hits5, i.Hits(), i.agents.Size(),
-				i.urls.Size(), status)
-		}
-		if carbon != nil {
-			carbon.Max("banthemall.hit-per-ip.max", i.Hits())
-			carbon.List("banthemall.hit-per-ip.percentile", i.Hits())
-		}
-	}
-	if carbon != nil {
-		carbon.Max("banthemall.distinct-ip.max", shortTerm.ips)
-	}
-	fmt.Printf("\t%d hits from %d ip\n", shortTerm.total, shortTerm.ips)
-}
-
-func longConsolidation(longTerm *LongTerm, carbon *Carbon) {
-	for _, user := range longTerm.Users() {
-		ip := user.ip
-		status := Rbl(ip)
-		fmt.Printf("\tLong: %15s #%d %s\n", ip, user.score, status)
-		if carbon != nil {
-			carbon.Max("banthemall.long.hit-per-ip.max", user.score)
-		}
-	}
-	fmt.Printf("\tLong total: %d\n\n", longTerm.total)
-
-}
+/*
+Infinite loop feed with a chan.
+*/
 func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Combined) {
 	shortTerm := NewShortTerm()
 	longTerm := NewLongTerm()
@@ -196,11 +195,11 @@ func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Comb
 			shortTerm.Add(&combi)
 			longTerm.Add(&combi)
 		case <-c:
-			shortConsolidation(shortTerm, gi, thresold, carbon)
+			shortTerm.Consolidate(gi, thresold, carbon)
 			shortTerm = NewShortTerm()
 			long++
 			if long == 60 {
-				longConsolidation(longTerm, carbon)
+				longTerm.Consolidate(carbon)
 				longTerm = NewLongTerm()
 				long = 0
 			}
