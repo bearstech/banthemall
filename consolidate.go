@@ -41,51 +41,51 @@ func (ip *IP) Hits() int {
 }
 
 type ShortTerm struct {
-	bag_ip map[string]*IP
-	total  int
-	ips    int
+	bagIP map[string]*IP
+	total int
+	ips   int
 }
 
 func NewShortTerm() *ShortTerm {
 	return &ShortTerm{
-		bag_ip: make(map[string]*IP),
+		bagIP: make(map[string]*IP),
 	}
 }
 
 func (s *ShortTerm) Add(combi *Combined) {
 	s.total++
 	ip := combi.ip
-	if _, ok := s.bag_ip[ip]; !ok {
-		s.bag_ip[ip] = NewIP(ip)
+	if _, ok := s.bagIP[ip]; !ok {
+		s.bagIP[ip] = NewIP(ip)
 		s.ips++
 	}
-	s.bag_ip[ip].Add(combi.status)
-	s.bag_ip[ip].agents.Add(combi.browser)
-	s.bag_ip[ip].urls.Add(combi.url)
+	s.bagIP[ip].Add(combi.status)
+	s.bagIP[ip].agents.Add(combi.browser)
+	s.bagIP[ip].urls.Add(combi.url)
 }
 
 func (s *ShortTerm) IPs() []*IP {
-	size := len(s.bag_ip)
+	size := len(s.bagIP)
 	ss := make([]user, size, size)
 	i := 0
-	for ip, obj := range s.bag_ip {
+	for ip, obj := range s.bagIP {
 		ss[i] = user{ip, obj.Hits()}
 		i++
 	}
 	sort.Sort(byscore(ss))
 	r := make([]*IP, size, size)
 	for i, ip := range ss {
-		r[i] = s.bag_ip[ip.ip]
+		r[i] = s.bagIP[ip.ip]
 	}
 	return r
 }
 
 func (s *ShortTerm) Size() int {
-	return len(s.bag_ip)
+	return len(s.bagIP)
 }
 
-func (shortTerm *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
-	for _, i := range shortTerm.IPs() {
+func (s *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
+	for _, i := range s.IPs() {
 		ip := i.ip
 		var loc *libgeo.Location
 		if gi != nil {
@@ -118,9 +118,9 @@ func (shortTerm *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *
 		}
 	}
 	if carbon != nil {
-		carbon.Max("banthemall.distinct-ip.max", shortTerm.ips)
+		carbon.Max("banthemall.distinct-ip.max", s.ips)
 	}
-	fmt.Printf("\t%d hits from %d ip\n", shortTerm.total, shortTerm.ips)
+	fmt.Printf("\t%d hits from %d ip\n", s.total, s.ips)
 }
 
 type LongTerm struct {
@@ -160,8 +160,8 @@ func (l *LongTerm) Users() []user {
 	return users
 }
 
-func (longTerm *LongTerm) Consolidate(carbon *Carbon) {
-	for _, user := range longTerm.Users() {
+func (l *LongTerm) Consolidate(carbon *Carbon) {
+	for _, user := range l.Users() {
 		ip := user.ip
 		status := Rbl(ip)
 		fmt.Printf("\tLong: %15s #%d %s\n", ip, user.score, status)
@@ -169,7 +169,7 @@ func (longTerm *LongTerm) Consolidate(carbon *Carbon) {
 			carbon.Max("banthemall.long.hit-per-ip.max", user.score)
 		}
 	}
-	fmt.Printf("\tLong total: %d\n\n", longTerm.total)
+	fmt.Printf("\tLong total: %d\n\n", l.total)
 }
 
 type user struct {
