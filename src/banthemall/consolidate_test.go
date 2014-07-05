@@ -1,6 +1,7 @@
 package main
 
 import (
+	"banthemall/combined"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 func TestConsolidate(t *testing.T) {
 	s := NewShortTerm()
 	l := NewLongTerm()
-	c := &Combined{
+	c := &combined.Combined{
 		"127.0.0.1",
 		"05/Jun/2014:21:49:52 +0200",
 		"POST",
@@ -21,7 +22,7 @@ func TestConsolidate(t *testing.T) {
 	}
 	s.Add(c)
 	l.Add(c)
-	c2 := &Combined{
+	c2 := &combined.Combined{
 		"127.0.0.1",
 		"05/Jun/2014:21:49:53 +0200",
 		"POST",
