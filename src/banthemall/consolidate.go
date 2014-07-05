@@ -2,6 +2,7 @@ package main
 
 import (
 	"banthemall/combined"
+	"banthemall/metrics"
 	"fmt"
 	"sort"
 	"time"
@@ -11,8 +12,8 @@ import (
 
 type IP struct {
 	ip      string
-	agents  *Counter
-	urls    *Counter
+	agents  *metrics.Counter
+	urls    *metrics.Counter
 	hits123 int
 	hits4   int
 	hits5   int
@@ -21,8 +22,8 @@ type IP struct {
 func NewIP(ip string) *IP {
 	return &IP{
 		ip:     ip,
-		agents: NewCounter(),
-		urls:   NewCounter(),
+		agents: metrics.NewCounter(),
+		urls:   metrics.NewCounter(),
 	}
 }
 

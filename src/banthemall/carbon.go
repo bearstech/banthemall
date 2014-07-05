@@ -1,6 +1,7 @@
 package main
 
 import (
+	"banthemall/metrics"
 	"fmt"
 	"log"
 	"net"
@@ -41,7 +42,7 @@ func NewCarbon(address string, freq time.Duration) *Carbon {
 
 func (c Carbon) loop() {
 	stat := make(map[string]int)
-	lstat := make(map[string]*Percentile)
+	lstat := make(map[string]*metrics.Percentile)
 	t := time.Tick(c.freq)
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -69,7 +70,7 @@ func (c Carbon) loop() {
 			}
 			if s.action == 'l' {
 				if _, ok := lstat[s.key]; !ok {
-					lstat[s.key] = NewPercentile()
+					lstat[s.key] = metrics.NewPercentile()
 				}
 				lstat[s.key].Append(s.value)
 			}
@@ -90,7 +91,7 @@ func (c Carbon) loop() {
 				fmt.Fprintf(conn, "servers.%s.%s.95 %d %d\n", hostname, k, v.Percentile(95), now.Unix())
 			}
 			stat = make(map[string]int)
-			lstat = make(map[string]*Percentile)
+			lstat = make(map[string]*metrics.Percentile)
 			if err = conn.Close(); err != nil {
 				log.Println(err)
 			}
