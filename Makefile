@@ -7,3 +7,6 @@ lib: src/github.com/nranchev/go-libGeoIP
 
 build: lib
 	GOPATH=`pwd` go build banthemall
+
+linux: lib
+	GOPATH=`pwd` gxc build-linux banthemall
