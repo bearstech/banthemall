@@ -1,18 +1,18 @@
-package main
+package combined
 
 import (
 	"regexp"
 )
 
 type Combined struct {
-	ip          string
-	timeStamp   string
-	method      string
-	url         string
-	status      string
-	requestSize string
-	referer     string
-	browser     string
+	IP          string
+	TimeStamp   string
+	Method      string
+	URL         string
+	Status      string
+	RequestSize string
+	Referer     string
+	Browser     string
 }
 type CombinedParser struct {
 	re *regexp.Regexp

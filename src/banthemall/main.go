@@ -1,6 +1,7 @@
 package main
 
 import (
+	"banthemall/combined"
 	"bufio"
 	"flag"
 	"fmt"
@@ -26,14 +27,14 @@ func main() {
 		return
 	}
 
-	apachelog, err := NewCombinedParser()
+	apachelog, err := combined.NewCombinedParser()
 	if err != nil {
 		fmt.Printf("Error Regexp: %s\n", err.Error())
 		return
 	}
 
 	bio := bufio.NewReader(os.Stdin)
-	count := make(chan Combined)
+	count := make(chan combined.Combined)
 	go consolidate(gi, *flagThresold, carbon, count)
 	for {
 		line, err := bio.ReadString('\n')

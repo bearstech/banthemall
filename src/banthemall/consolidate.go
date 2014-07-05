@@ -1,6 +1,7 @@
 package main
 
 import (
+	"banthemall/combined"
 	"fmt"
 	"sort"
 	"time"
@@ -52,16 +53,16 @@ func NewShortTerm() *ShortTerm {
 	}
 }
 
-func (s *ShortTerm) Add(combi *Combined) {
+func (s *ShortTerm) Add(combi *combined.Combined) {
 	s.total++
-	ip := combi.ip
+	ip := combi.IP
 	if _, ok := s.bagIP[ip]; !ok {
 		s.bagIP[ip] = NewIP(ip)
 		s.ips++
 	}
-	s.bagIP[ip].Add(combi.status)
-	s.bagIP[ip].agents.Add(combi.browser)
-	s.bagIP[ip].urls.Add(combi.url)
+	s.bagIP[ip].Add(combi.Status)
+	s.bagIP[ip].agents.Add(combi.Browser)
+	s.bagIP[ip].urls.Add(combi.URL)
 }
 
 func (s *ShortTerm) IPs() []*IP {
@@ -134,9 +135,9 @@ func NewLongTerm() *LongTerm {
 	}
 }
 
-func (l *LongTerm) Add(combi *Combined) {
+func (l *LongTerm) Add(combi *combined.Combined) {
 	l.total++
-	ip := combi.ip
+	ip := combi.IP
 	if _, ok := l.hits[ip]; !ok {
 		l.hits[ip] = 1
 	} else {
@@ -188,7 +189,7 @@ func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 /*
 Infinite loop feed with a chan.
 */
-func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan Combined) {
+func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan combined.Combined) {
 	shortTerm := NewShortTerm()
 	longTerm := NewLongTerm()
 	long := 0
