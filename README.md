@@ -8,14 +8,13 @@ For now, it's a production ready POC.
 Build it
 --------
 
-Install golang tools.
-
-    go get
-    go build
+    make
 
 Push the binary on your server.
 
 Cross compilation is very simple with [gxc](https://github.com/robertkrimen/gxc) tool.
+
+    make linux
 
 Use it
 ------
