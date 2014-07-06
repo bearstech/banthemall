@@ -11,26 +11,26 @@ func TestConsolidate(t *testing.T) {
 	s := NewShortTerm()
 	l := NewLongTerm()
 	c := &combined.Combined{
-		"127.0.0.1",
-		"05/Jun/2014:21:49:52 +0200",
-		"POST",
-		"/mt/mt-tb.cgi/6",
-		"403",
-		"147",
-		"http://jechercheunemeuf.info/",
-		"PHP/5.2.66",
+		IP:          "127.0.0.1",
+		TimeStamp:   "05/Jun/2014:21:49:52 +0200",
+		Method:      "POST",
+		URL:         "/mt/mt-tb.cgi/6",
+		Status:      "403",
+		RequestSize: "147",
+		Referer:     "http://jechercheunemeuf.info/",
+		Browser:     "PHP/5.2.66",
 	}
 	s.Add(c)
 	l.Add(c)
 	c2 := &combined.Combined{
-		"127.0.0.1",
-		"05/Jun/2014:21:49:53 +0200",
-		"POST",
-		"/mt/mt-tb.cgi/6",
-		"403",
-		"147",
-		"http://jechercheunemeuf.info/",
-		"PHP/5.2.66",
+		IP:          "127.0.0.1",
+		TimeStamp:   "05/Jun/2014:21:49:53 +0200",
+		Method:      "POST",
+		URL:         "/mt/mt-tb.cgi/6",
+		Status:      "403",
+		RequestSize: "147",
+		Referer:     "http://jechercheunemeuf.info/",
+		Browser:     "PHP/5.2.66",
 	}
 	s.Add(c2)
 	l.Add(c2)
