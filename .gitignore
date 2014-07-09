@@ -1,4 +1,6 @@
 GeoIP.dat
-banthemall
+/banthemall
+/banthemall-*
 src/github.com
 pkg
+*.log
