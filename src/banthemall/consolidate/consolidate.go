@@ -1,8 +1,9 @@
-package main
+package consolidate
 
 import (
 	"banthemall/combined"
 	"banthemall/metrics"
+	"banthemall/output"
 	"fmt"
 	"sort"
 	"time"
@@ -86,7 +87,11 @@ func (s *ShortTerm) Size() int {
 	return len(s.bagIP)
 }
 
-func (s *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon) {
+func (s *ShortTerm) Hits() int {
+	return s.total
+}
+
+func (s *ShortTerm) Consolidate(gi *libgeo.GeoIP, thresold int, carbon *output.Carbon) {
 	for _, i := range s.IPs() {
 		ip := i.ip
 		var loc *libgeo.Location
@@ -162,7 +167,7 @@ func (l *LongTerm) Users() []user {
 	return users
 }
 
-func (l *LongTerm) Consolidate(carbon *Carbon) {
+func (l *LongTerm) Consolidate(carbon *output.Carbon) {
 	for _, user := range l.Users() {
 		ip := user.ip
 		status := Rbl(ip)
@@ -190,7 +195,7 @@ func (b byscore) Less(i, j int) bool { return b[i].score > b[j].score }
 /*
 Infinite loop feed with a chan.
 */
-func consolidate(gi *libgeo.GeoIP, thresold int, carbon *Carbon, count chan combined.Combined) {
+func Forever(gi *libgeo.GeoIP, thresold int, carbon *output.Carbon, count chan combined.Combined) {
 	shortTerm := NewShortTerm()
 	longTerm := NewLongTerm()
 	long := 0

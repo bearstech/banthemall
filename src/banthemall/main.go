@@ -2,6 +2,8 @@ package main
 
 import (
 	"banthemall/combined"
+	"banthemall/consolidate"
+	"banthemall/output"
 	"bufio"
 	"flag"
 	"fmt"
@@ -18,7 +20,7 @@ func main() {
 
 	flag.Parse()
 
-	carbon := NewCarbon(*flagCarbon, 1*time.Minute)
+	carbon := output.NewCarbon(*flagCarbon, 1*time.Minute)
 
 	//FIXME try official Debian path, local path, and nothing.
 	gi, err := libgeo.Load("GeoIP.dat")
@@ -35,7 +37,7 @@ func main() {
 
 	bio := bufio.NewReader(os.Stdin)
 	count := make(chan combined.Combined)
-	go consolidate(gi, *flagThresold, carbon, count)
+	go consolidate.Forever(gi, *flagThresold, carbon, count)
 	for {
 		line, err := bio.ReadString('\n')
 		if err == io.EOF {
