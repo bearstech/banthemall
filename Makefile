@@ -15,6 +15,7 @@ test: lib lib-test
 
 build: lib
 	GOPATH=`pwd` go build banthemall
+	GOPATH=`pwd` go build banthemall/static
 
 linux: lib
 	GOPATH=`pwd` gxc build-linux banthemall
