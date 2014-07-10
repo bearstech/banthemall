@@ -32,7 +32,7 @@ func (c *CappedMetrics) Add(value float64) {
 	defer c.mutex.Unlock()
 
 	c.values[c.zero] = value
-	c.zero += 1
+	c.zero++
 	if c.zero >= len(c.values) {
 		c.zero = 0
 	}
@@ -55,7 +55,7 @@ func (c *CappedMetrics) Values() []*Values {
 	empty := 0
 	for _, v := range c.values {
 		if math.IsNaN(v) {
-			empty += 1
+			empty++
 		}
 	}
 	if len(c.values) == empty {
