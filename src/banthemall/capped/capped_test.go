@@ -9,7 +9,7 @@ import (
 )
 
 func TestCapped(t *testing.T) {
-	c := NewCappedMetrics(3, time.Now(), time.Minute)
+	c := NewCappedMetrics(3, time.Minute)
 	var i float64
 	for i = 0; i < 4; i++ {
 		c.Add(i)
@@ -26,7 +26,7 @@ func TestCapped(t *testing.T) {
 
 func TestMetric(t *testing.T) {
 	n := time.Now()
-	c := NewCappedMetrics(3, n.Add(-3*time.Minute), time.Minute)
+	c := NewCappedMetrics(3, time.Minute)
 	err := c.Metric(n.Add(-1*time.Minute), 37)
 	assert.Equal(t, nil, err)
 	err = c.Metric(n, 5)

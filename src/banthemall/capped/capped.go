@@ -17,7 +17,9 @@ type CappedMetrics struct {
 	size   int
 }
 
-func NewCappedMetrics(size int, start time.Time, step time.Duration) *CappedMetrics {
+func NewCappedMetrics(size int, step time.Duration) *CappedMetrics {
+	n := time.Now().Truncate(step)
+	start := n.Add(time.Duration(int64(-size) * int64(step)))
 	c := &CappedMetrics{
 		zero:   0,
 		values: make([]float64, size),
